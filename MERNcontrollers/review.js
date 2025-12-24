@@ -4,11 +4,12 @@ import Review from "../MERNmodels/review.js";
 
 export const postReview = async (req, res) => {
   if (!req.user) {
-    res.status(403).json({"message" : "You need to be logged in"})
-    return
+    res.status(403).json({ message: "You need to be logged in" });
+    return;
   }
   console.log("inside postReview route", req.body);
   try {
+    // timestamps: true in schema automatically sets both createdAt and updatedAt on creation
     const newReview = await Review.create(req.body);
     res.status(200).json(newReview);
   } catch (error) {
@@ -21,7 +22,8 @@ export const postReview = async (req, res) => {
   }
 };
 
-export const getReviews = async (req, res) => { // gets reviews for a building
+export const getReviews = async (req, res) => {
+  // gets reviews for a building
   console.log("inside getReviews route ", req.body);
   try {
     const reviews = await Review.find({ address: req.body.address });
@@ -42,7 +44,7 @@ export const getUserReviews = async (req, res) => {
     res.status(200).json(reviews);
   } catch (error) {
     if (res.statusCode == 400) {
-      res.status(400).json(error); 
+      res.status(400).json(error);
     } else {
       res.status(500).json(error);
     }
@@ -51,33 +53,34 @@ export const getUserReviews = async (req, res) => {
 
 export const updateReview = async (req, res) => {
   if (!req.user) {
-    res.status(403).json({"message" : "You need to be logged in"});
+    res.status(403).json({ message: "You need to be logged in" });
     return;
   }
   console.log("inside updateReview route", req.body);
   try {
     const review = await Review.findOne({ review_id: req.body.review_id });
-    
+
     if (!review) {
-      res.status(404).json({"message" : "Review not found"});
+      res.status(404).json({ message: "Review not found" });
       return;
     }
-    
+
     // Verify the user owns this review
     if (review.username !== req.user.username) {
-      res.status(403).json({"message" : "You can only update your own reviews"});
+      res.status(403).json({ message: "You can only update your own reviews" });
       return;
     }
-    
-    // Update only the fields that are provided
-    if (req.body.review_body !== undefined) {
-      review.review_body = req.body.review_body;
-    }
-    if (req.body.rating !== undefined) {
-      review.rating = req.body.rating;
-    }
-    
+
+    // Update the fields directly on the document
+    review.review_body = req.body.review_body ?? review.review_body;
+    review.rating = req.body.rating ?? review.rating;
+
+    // Explicitly set updatedAt (don't touch createdAt - it should remain unchanged)
+    review.updatedAt = new Date();
+
+    // Save the document - this will persist updatedAt to MongoDB
     const updatedReview = await review.save();
+
     res.status(200).json(updatedReview);
   } catch (error) {
     console.log(error);
