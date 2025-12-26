@@ -7,6 +7,7 @@ import {
   getReviews,
   getUserReviews,
   updateReview,
+  deleteReview,
 } from "../MERNcontrollers/review.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.post("/postReview", authRequired, postReview);
 router.post("/getReviews", getReviews);
 router.post("/getUserReviews", getUserReviews);
 router.put("/updateReview", authRequired, updateReview);
+router.delete("/deleteReview", authRequired, deleteReview);
 
 export default router;

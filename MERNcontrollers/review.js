@@ -91,3 +91,37 @@ export const updateReview = async (req, res) => {
     }
   }
 };
+
+export const deleteReview = async (req, res) => {
+  if (!req.user) {
+    res.status(403).json({ message: "You need to be logged in" });
+    return;
+  }
+  console.log("inside deleteReview route", req.body);
+  try {
+    const review = await Review.findOne({ review_id: req.body.review_id });
+
+    if (!review) {
+      res.status(404).json({ message: "Review not found" });
+      return;
+    }
+
+    // Verify the user owns this review
+    if (review.username !== req.user.username) {
+      res.status(403).json({ message: "You can only delete your own reviews" });
+      return;
+    }
+
+    // Delete the review
+    await Review.deleteOne({ review_id: req.body.review_id });
+
+    res.status(200).json({ message: "Review deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    if (error.status == 400) {
+      res.status(400).json(error);
+    } else {
+      res.status(500).json(error);
+    }
+  }
+};
